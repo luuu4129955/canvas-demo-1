@@ -1,46 +1,81 @@
 <!DOCTYPE html>
 <html lang="zn-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
     <title>画板</title>
-</head>
-<body>
-    <!--  -->
+  </head>
+  <body>
+    <!-- canvas可以设置宽高，且不被CSS样式覆盖。
+        若在CSS中修改宽高，只会对应地缩放原始大小-->
     <canvas id="canvas" width="100" height="100"></canvas>
+
     <script>
-        let canvas = document.getElementById("canvas");
-        canvas.width = document.documentElement.clientWidth
-        canvas.height = document.documentElement.clientHeight
-        let ctx = canvas.getContext("2d");
+      let canvas = document.getElementById("canvas");
 
-        let painting = false
+      // 把获取到的视口的宽高给canvas
+      canvas.width = document.documentElement.clientWidth;
+      canvas.height = document.documentElement.clientHeight;
+      let ctx = canvas.getContext("2d");
 
+      let painting = false;
+      //定义每一次画线的的起始坐标
+      let last;
 
-        ctx.fillStyle = "black";
-        ctx.strokeStyle = 'none'
+      ctx.fillStyle = "black"; //填充样式为黑
+      ctx.strokeStyle = "none"; //描边样式为空
+      ctx.lineWidth = 4; //线的粗细
+      ctx.lineCap = "round"; //在线条绘制端点加圆形
 
-        canvas.onmousedown = () => {
-            painting = true
-        }
+      //画线
+      function drawLine(x1, y1, x2, y2) {
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+      }
+
+      // 判断是否为触屏设备
+      var isTouchDevice = "ontouchstart" in document.documentElement;
+      if (isTouchDevice) {
+        // 以下是移动端
+        canvas.ontouchstart = (e) => {
+          // 获取第一个touch
+          let x = e.touches[0].clientX;
+          let y = e.touches[0].clientY;
+          // 当前last为画线的第一个起始坐标
+          last = [x, y];
+        };
+        canvas.ontouchmove = (e) => {
+          // 获取第一个touch
+          let x = e.touches[0].clientX;
+          let y = e.touches[0].clientY;
+          drawLine(last[0], last[1], x, y);
+          last = [x, y];
+        };
+      } else {
+        // 以下是PC端
+        // 鼠标按下开始画
+        canvas.onmousedown = (e) => {
+          painting = true;
+          //当前last为画线的第一个起始坐标
+          last = [e.clientX, e.clientY];
+        };
 
         canvas.onmousemove = (e) => {
-            if (painting === true) {
-                ctx.beginPath();
-                ctx.arc(e.clientX, e.clientY, 10, 0, 2 * Math.PI);
-                ctx.stroke();
-                ctx.fill();
-            } else {
-                console.log('什么都不做')
-            }
-        }
+          if (painting === true) {
+            drawLine(last[0], last[1], e.clientX, e.clientY);
+            last = [e.clientX, e.clientY];
+          }
+        };
 
+        // 鼠标松开停止画
         canvas.onmouseup = () => {
-            painting = false
-        }
-
+          painting = false;
+        };
+      }
     </script>
-</body>
+  </body>
 </html>
